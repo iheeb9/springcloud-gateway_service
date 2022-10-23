@@ -10,13 +10,14 @@ import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.annotation.Bean;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.netflix.discovery.DiscoveryClient;
 
 import gateway_microservice.gateway_microservice.filter.AuthenticationFilter;
 
+@RestController
 
-@EnableEurekaClient
 @SpringBootApplication
 public class GatewayMicroserviceApplication {
 	 @Autowired
@@ -25,11 +26,11 @@ public class GatewayMicroserviceApplication {
 	@Bean
 	public RouteLocator routes (RouteLocatorBuilder builder) {
 		return builder.routes()
-				.route(r -> r.path("/auth/**").uri("lb://BALADE-SERVICE"))
-		     	 .route("balade-service", r -> r.path("/balade/**")
-	                    .filters(f -> f.filter(filter))
-	                   .uri("lb://BALADE-SERVICE"))
-	                .build();
+			.route(r -> r.path("/auth/**").uri("lb://USER-SERVICE"))
+	     	 .route("balade-service", r -> r.path("/balade/**")
+	               .filters(f -> f.filter(filter))
+	               .uri("lb://BALADE-SERVICE"))
+	          .build();
 				
 	}
 	//@Bean
@@ -39,12 +40,13 @@ public class GatewayMicroserviceApplication {
 	
 	
 	
-	
-
+   @GetMapping("/auth/signup")
+   public String auth() {
+        return "Hello authentification";
+   }
 	public static void main(String[] args) {
 		
 		SpringApplication.run(GatewayMicroserviceApplication.class, args);
-		
 		
 		
 	}

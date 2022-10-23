@@ -1,33 +1,33 @@
 package gateway_microservice.gateway_microservice.filter;
 
+import java.util.List;
+
 import org.apache.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.http.ReactiveHttpOutputMessage;
-import org.springframework.http.server.ServerHttpRequest;
-import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import org.yaml.snakeyaml.DumperOptions.ScalarStyle;
+
+import com.google.common.base.Predicate;
 
 import gateway_microservice.gateway_microservice.token.jwtUtil;
+
 import io.jsonwebtoken.Claims;
 import reactor.core.publisher.Mono;
 @RefreshScope
 @Component
 public class AuthenticationFilter implements GatewayFilter{
 
-    @Autowired
-    private RouterValidator routerValidator;//custom route validator
+  
     @Autowired
     private jwtUtil jwtUtil;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
        org.springframework.http.server.reactive.ServerHttpRequest request =exchange.getRequest();
-       if (routerValidator.isSecured.apply(request)) {
+       if (this.isSecured.apply(request)) {
           if (this.isAuthMissing(request))
          return this.onError(exchange, "Authorization header is invalid");
            
@@ -62,7 +62,17 @@ public class AuthenticationFilter implements GatewayFilter{
         Claims claims = jwtUtil.getAllClaimsFromToken(token);
         exchange.getRequest().mutate()
                 .header("id", String.valueOf(claims.get("id")))
-                .header("role", String.valueOf(claims.get("role")))
+                .header("isAdmin", String.valueOf(claims.get("role")))
                 .build();
     }
+    
+    public static final List<String> openApiEndpoints= List.of(
+            "/auth/signup",
+            "/auth/signin"
+    );
+
+    public Predicate<org.springframework.http.server.reactive.ServerHttpRequest> isSecured =
+            request -> openApiEndpoints
+                    .stream()
+                    .noneMatch(uri -> request.getURI().getPath().contains(uri));
 }
